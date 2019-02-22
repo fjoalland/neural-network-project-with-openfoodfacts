@@ -6,10 +6,43 @@ import matplotlib.pyplot as plt
 
 #Le nombre d'elements maximum qu'on va afficher sur un graphique.
 #Pour eviter de detruire l'ordinateur
-graphiqueLimitation = 200
+graphiqueLimitation = 20
 
 #Nombre d'époques permettant aux neurones de s'entrainer 
 epoqueTotal = 2000
+
+#Fonction permettant de dessigner le grapg
+#nourritureListe = liste des ingredients
+#solutionsGraph = Liste si l'ingrédient est sain ou malsain (0 ou 1). Ce parametre peut être null
+#limit = limites de ce que on va afficher
+#title = titre du graphique
+def dessinnerGraphique(nourritureListe, solutionsGraph, limit, title):
+
+	#Graphique affichant les graisses par rapport aux graisses saturées
+	fig, axs = plt.subplots()
+
+	#On parcourt la liste des ingredients
+	for index in range(limit):
+
+		#Si on ne sait pas si l'ingredient est sain ou malsain, on affiche en bleu
+		if(len(solutionsGraph) == 0):
+			axs.plot(['fat_100g', 'saturated-fat_100g', 'salt_100g', 'sugars_100g'], nourritureListe[index],'o-', color='b')
+		else:
+
+			#Si l'ingredient est malsain
+			if(solutionsGraph[index] == 0):
+				axs.plot(['fat_100g', 'saturated-fat_100g', 'salt_100g', 'sugars_100g'], nourritureListe[index], 'o-',color='r')
+			#Si l'ingredient est sain
+			if(solutionsGraph[index] == 1):
+				axs.plot(['fat_100g', 'saturated-fat_100g', 'salt_100g', 'sugars_100g'], nourritureListe[index],'o-', color='g')
+
+	axs.legend()
+	axs.set_title(title)
+	axs.set_xlabel('Ingredients')
+	axs.set_ylabel('Grams')
+	plt.show()	
+
+
 
 def get_dataset():
 
@@ -59,9 +92,9 @@ def get_dataset():
 	#Empilement des tableaux en séquence verticalement
 	parametres = np.vstack([nourriture_entrainement])
 
-	#Graphique affichant les graisses par rapport aux graisses saturées
-	graph1 = plt.scatter(parametres[0:graphiqueLimitation,0], parametres[0:graphiqueLimitation,1], s=14,  c=solutionsGraph[0:graphiqueLimitation], cmap=plt.cm.Spectral)
-	plt.show()	
+	title = 'Display of ingredients by their nutritional characteristics'
+	#On affiche le grapgique avec des ingredients et leurs composants (fat, etc)
+	dessinnerGraphique(nourriture_entrainement, solutionsGraph, graphiqueLimitation, title)
 
 	return parametres, nourriture_objectif, openfoodfacts
 
@@ -83,7 +116,7 @@ if __name__ == '__main__':
 
 
 	# Operations PRE ACTIATION
-	# wi*pi + ... + b
+	# wi*pi + ... + bias
 	z1 = tf.matmul(tf_parametres, poid1) + b1
 
 
@@ -94,7 +127,7 @@ if __name__ == '__main__':
 
 
 	# La sortie du neurone
-	#Définission du poid et du bice
+	#Définission du poid et du bias
 	poid2 = tf.Variable(tf.random_normal([3, 1]))
 	b2 = tf.Variable(tf.zeros([1]))
 
@@ -110,7 +143,7 @@ if __name__ == '__main__':
 	probabilite = tf.nn.sigmoid(z2)
 
 	#Permet de définir l'erreur des predictions
-	#Opération: différence entre la prediction et la valeur attendu au carré
+	#Opération réalisée: différence entre la prediction et la valeur attendu au carré
 	erreur = tf.reduce_mean(tf.square(probabilite - tf_cibles))
 
 	#Definir si l'algorithme a fait une bonne prediction
@@ -129,11 +162,15 @@ if __name__ == '__main__':
 	session.run(tf.global_variables_initializer())
 
 	for e in range(epoqueTotal):
+
+		#Entrainement du neurone
 		session.run(entrainement, feed_dict={
 			tf_parametres: parametres,
 			tf_cibles: targets
 		})
 
+		#Affichage de la predection de l'époque actuelle. 
+		#Plus la prediction est proche de 1, plus le neurone fait peu d'erreurs
 		print('Frequency of correct accuracy = ',session.run(precision, feed_dict={
 			tf_parametres: parametres,
 			tf_cibles: targets
@@ -143,6 +180,20 @@ if __name__ == '__main__':
 	#Chargement des repas des touristess
 	repasTouristes, donneesTotal = fournisseur.chargement_donnees_evaluer()
 
+	#Converti les donnes en liste de liste pour les afficher dans le grapgique
+	repasTouritesListeGrapgique = repasTouristes[['fat_100g', 'saturated-fat_100g','salt_100g', 'sugars_100g']].values.tolist()
+
+	title = 'Before train - Display of ingredients by their nutritional characteristics'
+
+	#Afficher le graphique avec les ingredients
+	dessinnerGraphique(repasTouritesListeGrapgique, [], len(repasTouritesListeGrapgique),title)
+
+	#liste des predictions
+	predictions = []
+
+	print("\n")
+	print("****Showing predictions****")
+	print("\n")
 
 	for index in range(donneesTotal  + 1):
 
@@ -152,13 +203,13 @@ if __name__ == '__main__':
 		#Recuperation du nom du repas
 		product_name = repasTouristes['product_name'][index]
 		#Taux de matieres grasses sur 100g
-		fat_100g = float(repasTouristes['fat_100g'][index])
+		fat_100g = repasTouristes['fat_100g'][index]
 		#taux de matieres grasses saturées sur 100g
-		saturated_fat_100g = float(repasTouristes['saturated-fat_100g'][index])
+		saturated_fat_100g = repasTouristes['saturated-fat_100g'][index]
 		#taux de sel sur 100g
-		salt_100g = float(repasTouristes['salt_100g'][index])
+		salt_100g = repasTouristes['salt_100g'][index]
 		#taux de sucre sur 100g
-		sugars_100g = float(repasTouristes['sugars_100g'][index])
+		sugars_100g = repasTouristes['sugars_100g'][index]
 
 		#Ajout des différents composants 
 		repas_evaluer.append([fat_100g, saturated_fat_100g, salt_100g, sugars_100g])
@@ -170,11 +221,16 @@ if __name__ == '__main__':
 		result = session.run(probabilite, feed_dict={
 			tf_parametres: parametres
 		})
-		print(result)
+
+		#On a joute la prediction de ce neurone dans la liste des predictions
+		predictions.append(np.around(result))
 
 		#Si le repas est sain
 		if(np.around(result) == 1):
-			print("You can eat '" + product_name +"' without any problems, it is healthy")
+			print("Healthy: " + product_name)
 		#Si le repas est malsain
 		else: 
-			print("Do not eat a '" + product_name +"', it is not healty!")
+			print("Unhealthy: " + product_name)
+
+	title = 'After train - Display of ingredients by their nutritional characteristics'
+	dessinnerGraphique(repasTouritesListeGrapgique, predictions, len(repasTouritesListeGrapgique),title)

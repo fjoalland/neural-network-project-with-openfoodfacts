@@ -51,6 +51,10 @@ def chargement_donnees_evaluer():
 			if(index == 0):
 				colonnes  = ligne
 			else:
+				ligne[1] = float(ligne[1])
+				ligne[2] = float(ligne[2])
+				ligne[3] = float(ligne[3])
+				ligne[4] = float(ligne[4])
 				donnees.append(ligne)
 				dataCount += 1
 
