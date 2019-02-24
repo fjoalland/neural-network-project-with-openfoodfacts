@@ -227,10 +227,10 @@ if __name__ == '__main__':
 
 		#Si le repas est sain
 		if(np.around(result) == 1):
-			print("Healthy: " + product_name)
+			print("\033[32mHealthy:\033[0m " + product_name)
 		#Si le repas est malsain
 		else: 
-			print("Unhealthy: " + product_name)
+			print("\033[91mUnhealthy:\033[0m " + product_name)
 
 	title = 'After train - Display of ingredients by their nutritional characteristics'
 	dessinnerGraphique(repasTouritesListeGrapgique, predictions, len(repasTouritesListeGrapgique),title)
